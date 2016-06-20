@@ -22,39 +22,53 @@ func main() {
 		log.Fatal("Unable to create grid:", err)
 	}
 
-	ic := icon()
-	pb := progressBar()
-	pb.SetSizeRequest(700, 3)
+	css, err := gtk.CssProviderNew()
+	if err != nil {
+		log.Fatal("Unable to create css provider:", err)
+	}
 
-	grid.SetOrientation(gtk.ORIENTATION_VERTICAL)
-	grid.Add(ic)
-	grid.Add(pb)
+	lb := label()
+
+	grid.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
+	grid.Add(lb)
+	grid.Add(levelBar())
+
+	css.LoadFromPath("gobar.css")
+
+	style_context, err := lb.GetStyleContext()
+	if err != nil {
+		log.Fatal("Unable to get label style context:", err)
+	}
+	style_context.AddProvider(css, 0)
+
 	win.Add(grid)
+	win.Move(333, 700)
 
 	go func() {
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 1)
 		gtk.MainQuit()
+		//		win.Hide()
 	}()
 
 	win.ShowAll()
 	gtk.Main()
 }
 
-func icon() *gtk.Widget {
-	image, err := gtk.ImageNewFromFile(os.Args[1])
+func label() *gtk.Widget {
+	label, err := gtk.LabelNew(os.Args[1])
 
 	if err != nil {
-		log.Fatal("Unable to create image:", err)
+		log.Fatal("Unable to create label:", err)
 	}
 
-	return &image.Widget
+	return &label.Widget
 }
 
-func progressBar() *gtk.Widget {
-	pb, err := gtk.ProgressBarNew()
+func levelBar() *gtk.Widget {
+	lb, err := gtk.LevelBarNew()
 
 	if err != nil {
-		log.Fatal("Unable to create progress bar:", err)
+		log.Fatal("Unable to create level bar:", err)
 	}
 
 	f, err := strconv.ParseFloat(os.Args[2], 64)
@@ -62,7 +76,8 @@ func progressBar() *gtk.Widget {
 		log.Fatal("Can't convert float:", err)
 	}
 
-	pb.SetFraction(f)
+	lb.SetValue(f)
+	lb.SetSizeRequest(700, 30)
 
-	return &pb.Widget
+	return &lb.Widget
 }
