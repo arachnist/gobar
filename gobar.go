@@ -84,6 +84,7 @@ func main() {
 	win.SetWMClass("gobar", "gobar")
 	win.SetTitle("gobar")
 	win.Add(grid)
+	win.SetAcceptFocus(false)
 	win.Move(config.Position.X, config.Position.Y)
 
 	go func() {
