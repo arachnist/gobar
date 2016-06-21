@@ -79,8 +79,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to get label style context:", err)
 	}
-	style_context.AddProvider(css, 0)
+	style_context.AddProvider(css, gtk.STYLE_PROVIDER_PRIORITY_USER)
 
+	win.SetWMClass("gobar", "gobar")
+	win.SetTitle("gobar")
 	win.Add(grid)
 	win.Move(config.Position.X, config.Position.Y)
 
