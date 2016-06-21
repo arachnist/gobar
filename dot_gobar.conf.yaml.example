@@ -1,0 +1,9 @@
+---
+duration: "3000ms"
+css_path: "/home/arachnist/.gobar.css"
+position:
+    x: 300
+    y: 700
+bar_size:
+    x: 700
+    y: 30
