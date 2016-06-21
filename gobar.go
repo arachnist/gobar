@@ -70,8 +70,8 @@ func main() {
 	lb := label(os.Args[3])
 
 	grid.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
-	grid.Add(lb)
 	grid.Add(levelBar(f, config.BarSize.X, config.BarSize.Y))
+	grid.Add(lb)
 
 	css.LoadFromPath(config.CssPath)
 
