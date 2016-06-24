@@ -31,17 +31,16 @@ type gobarConfig struct {
 	} `yaml:"bar_size"`
 }
 
-func getLabelHandler(label *gtk.Label, bar *gtk.LevelBar, grid *gtk.Grid, win *gtk.Window) func(http.ResponseWriter, *http.Request) {
+func getLabelHandler(label *gtk.Label, bar *gtk.LevelBar, win *gtk.Window) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Siema co tam xD")
 		var err error
 		min := 0.0
 		max := 100.0
 		level := 50.0
 		duration, _ := time.ParseDuration("700ms")
 		labelText := "label string xD"
+
 		vars := r.URL.Query()
-		log.Println("vars:", vars)
 
 		if val, ok := vars["label"]; ok {
 			labelText = val[0]
@@ -76,10 +75,8 @@ func getLabelHandler(label *gtk.Label, bar *gtk.LevelBar, grid *gtk.Grid, win *g
 		bar.SetValue(level)
 		label.SetLabel(labelText)
 
+		win.Resize(10, 10)
 		win.ShowAll()
-		label.SetSizeRequest(10, 10)
-		grid.SetSizeRequest(10, 10)
-		win.SetSizeRequest(10, 10)
 
 		time.Sleep(duration)
 
@@ -145,7 +142,7 @@ func main() {
 	win.SetAcceptFocus(false)
 	win.Move(config.Position.X, config.Position.Y)
 
-	http.HandleFunc("/bar", getLabelHandler(lb, bar, grid, win))
+	http.HandleFunc("/bar", getLabelHandler(lb, bar, win))
 
 	go gtk.Main()
 
