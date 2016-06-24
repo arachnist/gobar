@@ -1,9 +1,16 @@
 package main
 
+/*
+#cgo LDFLAGS: -lX11
+#include <X11/Xlib.h>
+*/
+import "C"
+
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -24,16 +31,67 @@ type gobarConfig struct {
 	} `yaml:"bar_size"`
 }
 
+func getLabelHandler(label *gtk.Label, bar *gtk.LevelBar, grid *gtk.Grid, win *gtk.Window) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Siema co tam xD")
+		var err error
+		min := 0.0
+		max := 100.0
+		level := 50.0
+		duration, _ := time.ParseDuration("700ms")
+		labelText := "label string xD"
+		vars := r.URL.Query()
+		log.Println("vars:", vars)
+
+		if val, ok := vars["label"]; ok {
+			labelText = val[0]
+		}
+		if val, ok := vars["min"]; ok {
+			min, err = strconv.ParseFloat(val[0], 64)
+			if err != nil {
+				log.Println("Got a wrong min value", val, err)
+			}
+		}
+		if val, ok := vars["max"]; ok {
+			max, err = strconv.ParseFloat(val[0], 64)
+			if err != nil {
+				log.Println("Got a wrong max value", val, err)
+			}
+		}
+		if val, ok := vars["level"]; ok {
+			level, err = strconv.ParseFloat(val[0], 64)
+			if err != nil {
+				log.Println("Got a wrong level value", val, err)
+			}
+		}
+		if val, ok := vars["duration"]; ok {
+			duration, err = time.ParseDuration(val[0])
+			if err != nil {
+				log.Println("Got a wrong duration value", val, err)
+			}
+		}
+
+		bar.SetMinValue(min)
+		bar.SetMaxValue(max)
+		bar.SetValue(level)
+		label.SetLabel(labelText)
+
+		win.ShowAll()
+		label.SetSizeRequest(10, 10)
+		grid.SetSizeRequest(10, 10)
+		win.SetSizeRequest(10, 10)
+
+		time.Sleep(duration)
+
+		win.Hide()
+	}
+}
+
 func main() {
 	var config gobarConfig
 
-	if len(os.Args) < 4 {
-		log.Fatalln("Usage:", os.Args[0], "<configuration file> <level> <label>")
-	}
-
-	f, err := strconv.ParseFloat(os.Args[2], 64)
-	if err != nil {
-		log.Fatal("Can't convert float:", err)
+	if len(os.Args) != 2 {
+		log.Fatalln("Usage:", os.Args[0], "<configuration file>")
 	}
 
 	data, err := ioutil.ReadFile(os.Args[1])
@@ -45,17 +103,16 @@ func main() {
 		log.Fatalln("Error parsing configuration file:", err)
 	}
 
-	duration, err := time.ParseDuration(config.Duration)
-	if err != nil {
-		log.Fatal("Unable to parse duration:", err)
-	}
-
+	C.XInitThreads()
 	gtk.Init(nil)
 
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
 	}
+	win.Connect("destroy", func() {
+		gtk.MainQuit()
+	})
 
 	grid, err := gtk.GridNew()
 	if err != nil {
@@ -67,10 +124,11 @@ func main() {
 		log.Fatal("Unable to create css provider:", err)
 	}
 
-	lb := label(os.Args[3])
+	lb := label()
+	bar := levelBar(config.BarSize.X, config.BarSize.Y)
 
 	grid.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
-	grid.Add(levelBar(f, config.BarSize.X, config.BarSize.Y))
+	grid.Add(bar)
 	grid.Add(lb)
 
 	css.LoadFromPath(config.CssPath)
@@ -87,34 +145,31 @@ func main() {
 	win.SetAcceptFocus(false)
 	win.Move(config.Position.X, config.Position.Y)
 
-	go func() {
-		time.Sleep(duration)
-		gtk.MainQuit()
-	}()
+	http.HandleFunc("/bar", getLabelHandler(lb, bar, grid, win))
 
-	win.ShowAll()
-	gtk.Main()
+	go gtk.Main()
+
+	http.ListenAndServe("localhost:8080", nil)
 }
 
-func label(text string) *gtk.Widget {
-	label, err := gtk.LabelNew(text)
+func label() *gtk.Label {
+	label, err := gtk.LabelNew("xD")
 
 	if err != nil {
 		log.Fatal("Unable to create label:", err)
 	}
 
-	return &label.Widget
+	return label
 }
 
-func levelBar(value float64, x, y int) *gtk.Widget {
+func levelBar(x, y int) *gtk.LevelBar {
 	lb, err := gtk.LevelBarNew()
 
 	if err != nil {
 		log.Fatal("Unable to create level bar:", err)
 	}
 
-	lb.SetValue(value)
 	lb.SetSizeRequest(x, y)
 
-	return &lb.Widget
+	return lb
 }
