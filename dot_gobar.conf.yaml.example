@@ -1,9 +1,52 @@
 ---
-duration: "3000ms"
-css_path: "/home/arachnist/.gobar.css"
+css_path: /home/arachnist/.gobar.css
+listen: localhost:8080
 position:
     x: 300
     y: 700
 bar_size:
     x: 700
     y: 30
+actions:
+    vol_up:
+        command: "amixer -D pulse sset Master 5%+"
+        value: "amixer -D pulse sget Master | sed -n -r -e '/^\\s*Front Left/s/.*\\[([0-9]+)[%]\\].*/\\1/p'"
+        min: 0
+        max: 100
+        duration: 700ms
+        label: "  "
+    vol_down:
+        command: "amixer -D pulse sset Master 5%-"
+        value: "amixer -D pulse sget Master | sed -n -r -e '/^\\s*Front Left/s/.*\\[([0-9]+)[%]\\].*/\\1/p'"
+        min: 0
+        max: 100
+        duration: 700ms
+        label: "  "
+    cap_up:
+        command: "amixer -D pulse sset Capture 5%+"
+        value: "amixer -D pulse sget Capture | sed -n -r -e '/^\\s*Front Left/s/.*\\[([0-9]+)[%]\\].*/\\1/p'"
+        min: 0
+        max: 100
+        duration: 700ms
+        label: "  "
+    cap_down:
+        command: "amixer -D pulse sset Capture 5%-"
+        value: "amixer -D pulse sget Capture | sed -n -r -e '/^\\s*Front Left/s/.*\\[([0-9]+)[%]\\].*/\\1/p'"
+        min: 0
+        max: 100
+        duration: 700ms
+        label: "  "
+    backlight_up:
+        command: "xbacklight -inc 10"
+        value: "xbacklight -get"
+        min: 0
+        max: 100
+        duration: 700ms
+        label: "+"
+    backlight_down:
+        command: "xbacklight -dec 10"
+        value: "xbacklight -get"
+        min: 0
+        max: 100
+        duration: 700ms
+        label: "-"
