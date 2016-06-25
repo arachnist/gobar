@@ -2,7 +2,23 @@ package main
 
 /*
 #cgo LDFLAGS: -lX11
+#cgo pkg-config: gtk+-3.0
 #include <X11/Xlib.h>
+#include <gtk/gtk.h>
+
+void setup_css(char *path) {
+  GtkCssProvider *provider;
+  GdkDisplay *display;
+  GdkScreen *screen;
+  provider = gtk_css_provider_new();
+  display = gdk_display_get_default();
+  screen = gdk_display_get_default_screen(display);
+  gtk_style_context_add_provider_for_screen(screen,
+      GTK_STYLE_PROVIDER(provider),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), path, NULL);
+  g_object_unref(provider);
+}
 */
 import "C"
 
@@ -119,6 +135,8 @@ func main() {
 	C.XInitThreads()
 	gtk.Init(nil)
 
+	C.setup_css(C.CString(config.CssPath))
+
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
@@ -132,25 +150,12 @@ func main() {
 		log.Fatal("Unable to create grid:", err)
 	}
 
-	css, err := gtk.CssProviderNew()
-	if err != nil {
-		log.Fatal("Unable to create css provider:", err)
-	}
-
 	lb := label()
 	bar := levelBar(config.BarSize.X, config.BarSize.Y)
 
 	grid.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
 	grid.Add(bar)
 	grid.Add(lb)
-
-	css.LoadFromPath(config.CssPath)
-
-	style_context, err := lb.GetStyleContext()
-	if err != nil {
-		log.Fatal("Unable to get label style context:", err)
-	}
-	style_context.AddProvider(css, gtk.STYLE_PROVIDER_PRIORITY_USER)
 
 	win.SetWMClass("gobar", "gobar")
 	win.SetTitle("gobar")
