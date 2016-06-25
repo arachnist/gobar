@@ -189,7 +189,7 @@ func main() {
 				fmt.Fprintln(w, "error:", err)
 			}
 
-			_, _ = w.Write([]byte("OK\n"))
+			fmt.Fprintln(w, "status: OK\nvalue:", val)
 
 			go func() {
 				lb.SetLabel(value.Label)
