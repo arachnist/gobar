@@ -1,5 +1,5 @@
 ---
-css_path: /home/arachnist/.gobar.css
+css_path: dot_gobar.css.example
 listen: localhost:8080
 position:
     x: 300
